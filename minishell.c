@@ -15,76 +15,71 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <stdbool.h>
 
-#define NV 20			/* max number of command tokens */
-#define NL 100			/* input buffer size */
-char            line[NL];	/* command input buffer */
+#define MAX_TOKENS 20             /* max number of command tokens */
+#define INPUT_BUFFER_SIZE 100     /* input buffer size */
+char line[INPUT_BUFFER_SIZE];     /* command input buffer */
+char *SEPERATORS = " \t\n";
 
-
-/*
-	shell prompt
- */
-
-prompt(void)
-{
+/* shell prompt */
+void prompt(void) {
   fprintf(stdout, "\n msh> ");
   fflush(stdout);
 }
 
 
-/* argk - number of arguments */
-/* argv - argument vector from command line */
-/* envp - environment pointer */
-int main(int argk, char *argv[], char *envp[])
-{
-   int             frkRtnVal;	    /* value returned by fork sys call */
-   int             wpid;		        /* value returned by wait */
-  char           *v[NV];	        /* array of pointers to command line tokens */
-  char           *sep = " \t\n";  /* command line token separators    */
-  int             i;		          /* parse index */
+// /* argk - number of arguments */
+// /* argv - argument vector from command line */
+// /* envp - environment pointer */
+// int main(int argk, char *argv[], char *envp[])
+//! all Unused so voiding atm until I see its used
 
-    /* prompt for and process one command line at a time  */
+int main(void) {
+  int             fork_return_value;                // value returned by fork system call
+  int             wait_return_value;                // value returned by wait system call
+  char            *command_line_tokens[MAX_TOKENS];
 
-  while (1) {			/* do Forever */
+  /* prompt for and process one command line at a time  */
+
+  while (true) {    // do Forever
     prompt();
-    fgets(line, NL, stdin);
+    fgets(line, INPUT_BUFFER_SIZE, stdin);
     fflush(stdin);
 
-    if (feof(stdin)) {		/* non-zero on EOF  */
-
-      fprintf(stderr, "EOF pid %d feof %d ferror %d\n", getpid(),
-	      feof(stdin), ferror(stdin));
+    if (feof(stdin)) {  /* non-zero on EOF  */
+      fprintf(
+              stderr,
+              "EOF pid %d feof %d ferror %d\n",
+              getpid(),
+      	      feof(stdin),
+              ferror(stdin));
       exit(0);
     }
     if (line[0] == '#' || line[0] == '\n' || line[0] == '\000'){
       continue;			/* to prompt */
     }
 
-    v[0] = strtok(line, sep);
-    for (i = 1; i < NV; i++) {
-      v[i] = strtok(NULL, sep);
-      if (v[i] == NULL){
+    command_line_tokens[0] = strtok(line, SEPERATORS);
+
+    for (int parse_index = 1; parse_index < MAX_TOKENS; parse_index++) {
+      command_line_tokens[parse_index] = strtok(NULL, SEPERATORS);
+      if (command_line_tokens[parse_index] == NULL){
 	      break;
       }
     }
-    /* assert i is number of tokens + 1 */
+    /* assert parse_index is number of tokens + 1 */
 
-    /* fork a child process to exec the command in v[0] */
-    switch (frkRtnVal = fork()) {
-      case -1:			/* fork returns error to parent process */
-      {
-	      break;
+    /* fork a child process to exec the command in command_line_tokens[0] */
+    switch (fork_return_value = fork()) {
+      case -1: { break; }     /* fork returns error to parent process */
+      case 0: {               /* code executed only by child process */
+	      execvp(command_line_tokens[0], command_line_tokens);
       }
-      case 0:			/* code executed only by child process */
-      {
-	      execvp(v[0], v);
+      default: {              /* code executed only by parent process */
+      	wait_return_value = wait(0);
+        printf("%s done \n", command_line_tokens[0]);
       }
-      default:			/* code executed only by parent process */
-      {
-      	wpid = wait(0);
-        printf("%s done \n", v[0]);
-    	  break;
-      }
-    }				/* switch */
-  }				/* while */
-}				/* main */
+    }   /* switch */
+  }     /* while */
+}       /* main */
