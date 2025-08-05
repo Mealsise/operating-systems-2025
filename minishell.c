@@ -97,7 +97,9 @@ int main(void) {
                 execvp(command_line_tokens[0], command_line_tokens);
             }
             default: {              /* code executed only by parent process */
-                wait_return_value = wait(0);
+                bool not_background_execution = command_line_tokens[token_count - 1] != '&'
+                if (not_background_execution)
+                    wait_return_value = wait(0);
 
                 printf("%s done \n", command_line_tokens[0]);
             }
