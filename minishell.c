@@ -89,6 +89,21 @@ int main(void) {
         int token_count = capture_tokens(line, command_line_tokens, MAX_TOKENS, SEPERATORS);
         if (token_count == 0) continue;
 
+        // cd managing
+        if (strcmp(command_line_tokens[0], "cd") == 0) {
+            const char *target_dir = command_line_tokens[1];
+            if (target_dir == NULL) {
+                target_dir = getenv("HOME");
+                if (target_dir == NULL) {
+                    fprintf(stderr, "cd: HOME not set\n");
+                    continue;
+                }
+            }
+
+            if (chdir(target_dir) != 0) perror("cd");
+            printf("cd done \n");
+            continue;
+        }
 
         /* fork a child process to exec the command in command_line_tokens[0] */
         switch (fork_return_value = fork()) {
