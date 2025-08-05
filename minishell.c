@@ -97,7 +97,7 @@ int main(void) {
                 execvp(command_line_tokens[0], command_line_tokens);
             }
             default: {              /* code executed only by parent process */
-                bool not_background_execution = command_line_tokens[token_count - 1] != '&'
+                bool not_background_execution = (token_count < 1 || strcmp(command_line_tokens[token_count - 1], "&") != 0);
                 if (not_background_execution)
                     wait_return_value = wait(0);
 
