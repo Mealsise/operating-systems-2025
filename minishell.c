@@ -105,6 +105,11 @@ int main(void) {
             continue;
         }
 
+        bool background_execution = strcmp(command_line_tokens[token_count - 1], "&") == 0
+        if (background_execution) {
+
+        }
+
         /* fork a child process to exec the command in command_line_tokens[0] */
         switch (fork_return_value = fork()) {
             case -1: { break; }     /* fork returns error to parent process */
