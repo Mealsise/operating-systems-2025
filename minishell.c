@@ -56,17 +56,21 @@ int capture_tokens(char *line, char *tokens[], int max_tokens, const char *separ
 
 /* shell prompt */
 void prompt(void) {
-    fprintf(stdout, "\n msh> ");
-    fflush(stdout);
+    // fprintf(stdout, "\n msh> ");
+    // fflush(stdout);
 }
 
 
 static void change_directory(char *target) {
     const char *target_dir = target;
 
-    if (!target_dir) {target_dir = getenv("HOME");}                         // Manage no arg
-    if (strcmp(target_dir, "~") == 0) {target_dir = getenv("HOME");}        // manage "~"" arg
-    if (!target_dir) {fprintf(stderr, "cd: HOME not set\n");return;}    // If getenv("HOME") failed
+    if (!target_dir) {                         // cd
+        target_dir = getenv("HOME");
+        if (!target_dir) { fprintf(stderr, "cd: HOME not set\n"); return; }
+    } else if (strcmp(target_dir, "~") == 0) { // cd ~
+        target_dir = getenv("HOME");
+        if (!target_dir) { fprintf(stderr, "cd: HOME not set\n"); return; }
+    }
 
     char *old_cwd = getcwd(NULL, 0);
 
@@ -125,6 +129,10 @@ int main(void) {
 
         // cd managing
         if (strcmp(command_line_tokens[0], "cd") == 0) {
+            if (command_line_tokens[1] && command_line_tokens[2]) {
+                fprintf(stderr, "cd: too many arguements\n");
+                continue;
+            }
             change_directory(command_line_tokens[1]);
             continue;
         }
