@@ -105,7 +105,7 @@ int main(void) {
             continue;
         }
 
-        bool background_execution = strcmp(command_line_tokens[token_count - 1], "&") == 0
+        bool background_execution = strcmp(command_line_tokens[token_count - 1], "&") == 0;
         if (background_execution) {
 
         }
