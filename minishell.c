@@ -71,6 +71,8 @@ int main(void) {
     int             wait_return_value;                // value returned by wait system call
     char            *command_line_tokens[MAX_TOKENS];
 
+    (void)wait_return_value;
+
     /* prompt for and process one command line at a time  */
 
     while (true) {    // do Forever
