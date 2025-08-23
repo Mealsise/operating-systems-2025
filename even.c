@@ -4,15 +4,24 @@
 #include <signal.h>
 #include <stdbool.h>
 
-// Global flags set by signal handlers
-volatile sig_atomic_t got_hup = 0;
-volatile sig_atomic_t got_int = 0;
+// async-signal-safe writer
+static void say(const char *str) {
+    while (*str)
+    {
+        (void)write(STDOUT_FILENO, str, 1);
+        str++;
+    }
+}
 
-// Handle SIGHUP signal: sets flag to print "Ouch!"
-void handle_hup(int sig) {got_hup = 1;}
+static void handle_hup(int sig) {
+    (void)sig;
+    say("Ouch!\n");
+}
 
-// Handle SIGHUP signal: sets flag to print "Ouch!"
-void handle_int(int sig) {got_int = 1;}
+static void handle_int(int sig) {
+    (void)sig;
+    say("Yeah!\n");
+}
 
 // Check signal flags and print messages when needed
 void handle_flag(const char *msg, volatile sig_atomic_t *flag) {
@@ -37,22 +46,30 @@ int main (int argc, char *argv[]) {
         return 1;
     }
     max_even <<= 1;
+    max_even -= 1;
 
     // Register signal handlers
-    signal(SIGHUP, handle_hup);
-    signal(SIGINT, handle_int);
+    struct sigaction sig_action_hup;
+    struct sigaction sig_action_int;
+    sigemptyset(&sig_action_hup.sa_mask);
+    sig_action_hup.sa_flags = 0;                  /* let sleep be interrupted */
+    sig_action_hup.sa_handler = handle_hup;
+    if (sigaction(SIGHUP, &sig_action_hup, NULL) == -1){ perror("sigaction SIGHUP"); return 1; }
+
+    sigemptyset(&sig_action_int.sa_mask);
+    sig_action_int.sa_flags = 0;
+    sig_action_int.sa_handler = handle_int;
+    if (sigaction(SIGINT, &sig_action_int, NULL) == -1){ perror("sigaction SIGINT"); return 1; }
+
+
 
     // Loop through first n even numbers
-    for (int to_print = 0; to_print <= max_even; to_print += 1) {
+    for (int to_print = 0; to_print <= max_even; to_print += 2) {
         printf("%d\n", to_print);
         fflush(stdout);
 
         // Only sleep if not the final number
         if (to_print < max_even) sleep(5);      // Does the if so that it doesn't wait after final print
-
-        // Handle any received signals
-        handle_flag("Ouch!", &got_hup);
-        handle_flag("Yeah!", &got_int);
     }
 
     return 0;
