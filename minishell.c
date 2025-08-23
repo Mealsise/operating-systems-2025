@@ -8,6 +8,7 @@
 
 ********************************************************************/
 
+#define _POSIX_C_SOURCE 200809L
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <stdio.h>
@@ -60,6 +61,33 @@ void prompt(void) {
 }
 
 
+static void change_directory(char *target) {
+    const char *target_dir = target;
+
+    if (!target_dir) {target = getenv("HOME");}                         // Manage no arg
+    if (strcmp(target_dir, "~") == 0) {target = getenv("HOME");}        // manage "~"" arg
+    if (!target_dir) {fprintf(stderr, "cd: HOME not set\n");return;}    // If getenv("HOME") failed
+
+    char *old_cwd = getcwd(NULL, 0);
+
+    if (chdir(target_dir) == -1) {
+        perror("chdir");
+        free(old_cwd);
+        return;
+    }
+
+    if (old_cwd) {
+        setenv("OLDPWD", old_cwd, 1);
+        free(old_cwd);
+    }
+    char *new_cwd = getcwd(NULL, 0);
+    if (new_cwd) {
+        setenv("PWD", new_cwd, 1);
+        free(new_cwd);
+    }
+}
+
+
 // /* argk - number of arguments */
 // /* argv - argument vector from command line */
 // /* envp - environment pointer */
@@ -77,7 +105,11 @@ int main(void) {
 
     while (true) {    // do Forever
         prompt();
-        fgets(line, INPUT_BUFFER_SIZE, stdin);
+        if (!fgets(line, INPUT_BUFFER_SIZE, stdin)) {
+            if (feof(stdin)) exit(0);
+            perror("fgets");
+            continue;
+        }
         fflush(stdin);
 
         // validate inputs
@@ -93,17 +125,7 @@ int main(void) {
 
         // cd managing
         if (strcmp(command_line_tokens[0], "cd") == 0) {
-            const char *target_dir = command_line_tokens[1];
-            if (target_dir == NULL) {
-                target_dir = getenv("HOME");
-                if (target_dir == NULL) {
-                    fprintf(stderr, "cd: HOME not set\n");
-                    continue;
-                }
-            }
-
-            if (chdir(target_dir) != 0) perror("cd");
-            printf("cd done \n");
+            change_directory(command_line_tokens[1]);
             continue;
         }
 
@@ -117,6 +139,8 @@ int main(void) {
             case -1: { break; }     /* fork returns error to parent process */
             case 0: {               /* code executed only by child process  */
                 execvp(command_line_tokens[0], command_line_tokens);
+                perror("execvp");
+                _exit(127);
             }
             default: {              /* code executed only by parent process */
                 bool not_background_execution = (token_count < 1 || strcmp(command_line_tokens[token_count - 1], "&") != 0);
