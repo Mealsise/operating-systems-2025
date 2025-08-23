@@ -64,8 +64,8 @@ void prompt(void) {
 static void change_directory(char *target) {
     const char *target_dir = target;
 
-    if (!target_dir) {target = getenv("HOME");}                         // Manage no arg
-    if (strcmp(target_dir, "~") == 0) {target = getenv("HOME");}        // manage "~"" arg
+    if (!target_dir) {target_dir = getenv("HOME");}                         // Manage no arg
+    if (strcmp(target_dir, "~") == 0) {target_dir = getenv("HOME");}        // manage "~"" arg
     if (!target_dir) {fprintf(stderr, "cd: HOME not set\n");return;}    // If getenv("HOME") failed
 
     char *old_cwd = getcwd(NULL, 0);
