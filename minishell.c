@@ -155,7 +155,7 @@ int main(void) {
                 if (not_background_execution)
                     wait_return_value = wait(0);
 
-                printf("%s done \n", command_line_tokens[0]);
+                // printf("%s done \n", command_line_tokens[0]);
             }
         }
     }
