@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,7 +9,8 @@
 static void say(const char *str) {
     while (*str)
     {
-        (void)write(STDOUT_FILENO, str, 1);
+        ssize_t voided = write(STDOUT_FILENO, str, 1);
+        (void)voided;
         str++;
     }
 }
@@ -23,15 +25,6 @@ static void handle_int(int sig) {
     say("Yeah!\n");
 }
 
-// Check signal flags and print messages when needed
-void handle_flag(const char *msg, volatile sig_atomic_t *flag) {
-    if (*flag) {
-        printf("%s\n", msg);
-        fflush(stdout);
-        *flag = 0;
-    }
-}
-
 int main (int argc, char *argv[]) {
     // Check usage
     if (argc != 2) {
@@ -40,17 +33,17 @@ int main (int argc, char *argv[]) {
     }
 
     // Convert argument to int and validate
-    int max_even = atoi(argv[1]);
-    if (max_even < 0) {
+    int count = atoi(argv[1]);
+    if (count < 0) {
         fprintf(stderr, "Please provide a non-negative integer.\n");
         return 1;
     }
-    max_even <<= 1;
-    max_even -= 1;
+    int max_even = (count<<1) - 1;
 
     // Register signal handlers
     struct sigaction sig_action_hup;
     struct sigaction sig_action_int;
+
     sigemptyset(&sig_action_hup.sa_mask);
     sig_action_hup.sa_flags = 0;                  /* let sleep be interrupted */
     sig_action_hup.sa_handler = handle_hup;
