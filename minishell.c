@@ -29,6 +29,17 @@ typedef enum {
     INPUT_EXIT       // exit shell
 } InputStatus;
 
+#define MAX_JOBS 128
+typedef struct {
+    int id;
+    pid_t ///
+    int active;
+    char cmd[INPUT_BUFFER_SIZE]
+} Job;
+static Job jobs[MAX_JOBS];
+static int next_job_id = 1;
+
+
 InputStatus validate_input(char *line) {
     if (feof(stdin)) {  /* non-zero on EOF  */
         fprintf(stderr, "EOF pid %d feof %d ferror %d\n", getpid(), feof(stdin), ferror(stdin));
