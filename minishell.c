@@ -165,13 +165,14 @@ int main(void) {
     /* prompt for and process one command line at a time  */
 
     while (true) {    // do Forever
+        tick_background();
         prompt();
+
         if (!fgets(line, INPUT_BUFFER_SIZE, stdin)) {
             if (feof(stdin)) exit(0);
             perror("fgets");
             continue;
         }
-        fflush(stdin);
 
         // validate inputs
         switch (validate_input(line)) {
@@ -187,7 +188,7 @@ int main(void) {
         // cd managing
         if (strcmp(command_line_tokens[0], "cd") == 0) {
             if (command_line_tokens[1] && command_line_tokens[2]) {
-                fprintf(stderr, "cd: too many arguements\n");
+                fprintf(stderr, "cd: too many arguments\n");
                 continue;
             }
             change_directory(command_line_tokens[1]);
@@ -195,7 +196,6 @@ int main(void) {
         }
 
 
-        tick_background();
         bool background_execution = (token_count > 0 && strcmp(command_line_tokens[token_count - 1], "&") == 0);
         if (background_execution) {
             command_line_tokens[token_count - 1] = NULL;
